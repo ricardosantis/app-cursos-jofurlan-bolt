@@ -1,7 +1,14 @@
 import React, { createContext, useState, useEffect } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { User } from '@/types';
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.EXPO_PUBLIC_SUPABASE_URL || '',
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || ''
+);
 
 interface AuthContextType {
   user: User | null;
@@ -23,41 +30,80 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
+// Helper functions for storage operations
+const storage = {
+  async getItem(key: string): Promise<string | null> {
+    if (Platform.OS === 'web') {
+      return localStorage.getItem(key);
+    }
+    return await SecureStore.getItemAsync(key);
+  },
+
+  async setItem(key: string, value: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      localStorage.setItem(key, value);
+    } else {
+      await SecureStore.setItemAsync(key, value);
+    }
+  },
+
+  async removeItem(key: string): Promise<void> {
+    if (Platform.OS === 'web') {
+      localStorage.removeItem(key);
+    } else {
+      await SecureStore.deleteItemAsync(key);
+    }
+  }
+};
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser({
-          id: parseInt(session.user.id),
-          email: session.user.email!,
-          name: session.user.user_metadata.name || 'User',
-          avatar: session.user.user_metadata.avatar_url,
-        });
-      } else {
-        setUser(null);
-      }
-      setIsLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    // Load user from storage on mount
+    loadUser();
   }, []);
+
+  const loadUser = async () => {
+    try {
+      const userJSON = await storage.getItem('user');
+      if (userJSON) {
+        setUser(JSON.parse(userJSON));
+      }
+    } catch (error) {
+      console.error('Failed to load user:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        const user: User = {
+          id: data.user.id,
+          name: profile?.name || data.user.email?.split('@')[0] || 'User',
+          email: data.user.email || '',
+          avatar: profile?.avatar_url || 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
+        };
       
-      if (error) {
-        throw error;
+        await storage.setItem('user', JSON.stringify(user));
+        setUser(user);
       }
     } catch (error) {
       console.error('Sign in failed:', error);
@@ -70,19 +116,36 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signUp = async (name: string, email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            name,
-            avatar_url: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
-          },
-        },
       });
+
+      if (error) throw error;
+
+      if (data.user) {
+        // Create profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: data.user.id,
+              name,
+              avatar_url: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
+            },
+          ]);
+
+        if (profileError) throw profileError;
+
+        const user: User = {
+          id: data.user.id,
+          name,
+          email: data.user.email || '',
+          avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
+        };
       
-      if (error) {
-        throw error;
+        await storage.setItem('user', JSON.stringify(user));
+        setUser(user);
       }
     } catch (error) {
       console.error('Sign up failed:', error);
@@ -96,9 +159,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setIsLoading(true);
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
+      
+      // Remove user from storage
+      await storage.removeItem('user');
+      setUser(null);
     } catch (error) {
       console.error('Sign out failed:', error);
     } finally {
