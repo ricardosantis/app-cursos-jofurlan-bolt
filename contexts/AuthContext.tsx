@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
-import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import { supabase } from '@/lib/supabase';
 import { User } from '@/types';
 
 interface AuthContextType {
@@ -23,69 +23,42 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-// Helper functions for storage operations
-const storage = {
-  async getItem(key: string): Promise<string | null> {
-    if (Platform.OS === 'web') {
-      return localStorage.getItem(key);
-    }
-    return await SecureStore.getItemAsync(key);
-  },
-
-  async setItem(key: string, value: string): Promise<void> {
-    if (Platform.OS === 'web') {
-      localStorage.setItem(key, value);
-    } else {
-      await SecureStore.setItemAsync(key, value);
-    }
-  },
-
-  async removeItem(key: string): Promise<void> {
-    if (Platform.OS === 'web') {
-      localStorage.removeItem(key);
-    } else {
-      await SecureStore.deleteItemAsync(key);
-    }
-  }
-};
-
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load user from storage on mount
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
-    try {
-      const userJSON = await storage.getItem('user');
-      if (userJSON) {
-        setUser(JSON.parse(userJSON));
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: parseInt(session.user.id),
+          email: session.user.email!,
+          name: session.user.user_metadata.name || 'User',
+          avatar: session.user.user_metadata.avatar_url,
+        });
+      } else {
+        setUser(null);
       }
-    } catch (error) {
-      console.error('Failed to load user:', error);
-    } finally {
       setIsLoading(false);
-    }
-  };
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      // In a real app, this would make an API call to authenticate the user
-      // For demo purposes, we'll just create a mock user
-      const mockUser: User = {
-        id: 1,
-        name: 'Usuário Demo',
-        email: email,
-        avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
-      };
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      // Save user to storage
-      await storage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      if (error) {
+        throw error;
+      }
     } catch (error) {
       console.error('Sign in failed:', error);
       throw new Error('Falha ao fazer login. Verifique suas credenciais.');
@@ -97,18 +70,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signUp = async (name: string, email: string, password: string) => {
     try {
       setIsLoading(true);
-      // In a real app, this would make an API call to create a new user
-      // For demo purposes, we'll just create a mock user
-      const mockUser: User = {
-        id: 1,
-        name: name,
-        email: email,
-        avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
-      };
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            avatar_url: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
+          },
+        },
+      });
       
-      // Save user to storage
-      await storage.setItem('user', JSON.stringify(mockUser));
-      setUser(mockUser);
+      if (error) {
+        throw error;
+      }
     } catch (error) {
       console.error('Sign up failed:', error);
       throw new Error('Falha ao criar conta. Tente novamente.');
@@ -120,9 +95,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const signOut = async () => {
     try {
       setIsLoading(true);
-      // Remove user from storage
-      await storage.removeItem('user');
-      setUser(null);
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        throw error;
+      }
     } catch (error) {
       console.error('Sign out failed:', error);
     } finally {
