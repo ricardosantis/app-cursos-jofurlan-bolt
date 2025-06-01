@@ -1,6 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
 import { allCourses } from '@/data/courses';
 
 interface ProgressState {

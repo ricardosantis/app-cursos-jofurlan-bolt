@@ -8,8 +8,6 @@ declare global {
 
 export function useFrameworkReady() {
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.frameworkReady?.();
-    }
-  }, []); // Add empty dependency array to run effect only once
+    window.frameworkReady?.();
+  });
 }
