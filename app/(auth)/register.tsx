@@ -1,14 +1,14 @@
-import { SignIn } from '@stackframe/react';
+import { SignUp } from '@stackframe/react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Bem-vindo</Text>
-        <SignIn />
+        <Text style={styles.title}>Create an account</Text>
+        <SignUp />
       </View>
     </SafeAreaView>
   );

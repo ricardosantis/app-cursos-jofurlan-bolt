@@ -4,48 +4,54 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, ChevronLeft, ChevronRight, Download } from 'lucide-react-native';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
-import { getLessonById, getNextLesson, getPreviousLesson } from '@/data/courses';
+import { getLessonById, getNextLesson, getPreviousLesson } from '@/lib/data';
+import { Lesson } from '@/types';
 import { Video, ResizeMode } from 'expo-av';
 import { WebView } from 'react-native-webview';
 import { useProgress } from '@/hooks/useProgress';
 
 const { width } = Dimensions.get('window');
 
-/**
- * @function LessonScreen
- * @description This component renders the lesson screen, which displays the content of a specific lesson.
- * It can handle both video and text content, and includes navigation to the previous and next lessons.
- * @returns {JSX.Element} The rendered component.
- */
 export default function LessonScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const lesson = getLessonById(parseInt(id || '1'));
+  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [nextLesson, setNextLesson] = useState<Lesson | null>(null);
+  const [previousLesson, setPreviousLesson] = useState<Lesson | null>(null);
   const videoRef = useRef<Video>(null);
   const [status, setStatus] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
   const { markLessonComplete, isLessonComplete } = useProgress();
-  
-  const previousLesson = getPreviousLesson(parseInt(id || '1'));
-  const nextLesson = getNextLesson(parseInt(id || '1'));
 
   useEffect(() => {
-    if (lesson) {
-      setIsCompleted(isLessonComplete(lesson.id));
-    }
-  }, [lesson]);
+    const fetchLesson = async () => {
+      try {
+        const lessonId = parseInt(id || '1');
+        const fetchedLesson = await getLessonById(lessonId);
+        setLesson(fetchedLesson);
+
+        if (fetchedLesson) {
+          setIsCompleted(isLessonComplete(fetchedLesson.id));
+          const fetchedNextLesson = await getNextLesson(lessonId);
+          setNextLesson(fetchedNextLesson);
+          const fetchedPreviousLesson = await getPreviousLesson(lessonId);
+          setPreviousLesson(fetchedPreviousLesson);
+        }
+      } catch (error) {
+        console.error('Failed to fetch lesson:', error);
+      }
+    };
+
+    fetchLesson();
+  }, [id]);
 
   if (!lesson) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Aula não encontrada</Text>
+        <Text>Carregando aula...</Text>
       </SafeAreaView>
     );
   }
 
-  /**
-   * @function handleComplete
-   * @description Marks the current lesson as complete.
-   */
   const handleComplete = () => {
     if (!isCompleted && lesson) {
       markLessonComplete(lesson.id);
@@ -53,19 +59,10 @@ export default function LessonScreen() {
     }
   };
 
-  /**
-   * @function handleVideoComplete
-   * @description Automatically marks the lesson as complete when the video finishes playing.
-   */
   const handleVideoComplete = () => {
     handleComplete();
   };
 
-  /**
-   * @function handleNavigation
-   * @description Navigates to a different lesson.
-   * @param {number} targetId - The ID of the lesson to navigate to.
-   */
   const handleNavigation = (targetId: number) => {
     router.replace(`/lesson/${targetId}`);
   };
@@ -94,7 +91,6 @@ export default function LessonScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        {/* Content based on lesson type */}
         {lesson.type === 'video' ? (
           <View style={styles.videoContainer}>
             <Video
@@ -121,17 +117,7 @@ export default function LessonScreen() {
               />
             ) : (
               <Text style={styles.textContent}>
-                {lesson.content || `Conteúdo em texto da aula "${lesson.title}". Este é um exemplo de conteúdo em texto que seria exibido para uma aula do tipo leitura. O conteúdo real seria muito mais extenso e detalhado, com formatação adequada, imagens e outros elementos para uma boa experiência de aprendizado.
-
-Este é apenas um placeholder para demonstrar como o conteúdo seria exibido nesta interface.
-
-O texto pode incluir:
-- Explicações detalhadas
-- Exemplos práticos
-- Dicas e conselhos
-- Referências para leitura adicional
-
-E muito mais conteúdo educacional relacionado ao tema do curso.`}
+                {lesson.content || `Conteúdo em texto da aula "${lesson.title}".`}
               </Text>
             )}
           </View>
@@ -143,12 +129,11 @@ E muito mais conteúdo educacional relacionado ao tema do curso.`}
             {lesson.type === 'video' ? 'Vídeo' : 'Leitura'} • {lesson.duration}
           </Text>
           <Text style={styles.lessonDescription}>
-            {lesson.description || 'Descrição detalhada da aula, explicando o que será abordado e os principais tópicos de aprendizado. Esta descrição ajuda o aluno a entender o valor e relevância desta aula específica dentro do módulo e do curso como um todo.'}
+            {lesson.description || 'Descrição detalhada da aula.'}
           </Text>
         </View>
       </ScrollView>
 
-      {/* Bottom Action Bar */}
       <View style={styles.bottomBar}>
         <View style={styles.navigationButtons}>
           <TouchableOpacity

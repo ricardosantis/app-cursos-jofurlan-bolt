@@ -1,27 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { useAuth } from '@/hooks/useAuth';
+import { useUser } from '@stackframe/react';
 import { Search, BellDot, ArrowRight } from 'lucide-react-native';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import { useProgress } from '@/hooks/useProgress';
 import Animated, { FadeInRight, FadeInUp } from 'react-native-reanimated';
 import CourseCard from '@/components/courses/CourseCard';
-import { featuredCourses, inProgressCourses } from '@/data/courses';
+import { getFeaturedCourses, getInProgressCourses } from '@/lib/data';
+import { Course } from '@/types';
 
-/**
- * @function HomeScreen
- * @description This component renders the home screen of the application.
- * It displays a greeting to the user, a search bar, an overview of the user's progress,
- * and lists of courses to continue learning and featured courses.
- * @returns {JSX.Element} The rendered component.
- */
 export default function HomeScreen() {
-  const { user } = useAuth();
+  const user = useUser();
   const { getOverallProgress } = useProgress();
   const overallProgress = getOverallProgress();
-  
+
+  const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
+  const [inProgressCourses, setInProgressCourses] = useState<Course[]>([]);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const featured = await getFeaturedCourses();
+        setFeaturedCourses(featured);
+
+        const inProgress = await getInProgressCourses();
+        setInProgressCourses(inProgress);
+      } catch (error) {
+        console.error('Failed to fetch courses:', error);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -31,7 +44,7 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Olá, {user?.name || 'Aluno'}</Text>
+            <Text style={styles.greeting}>Olá, {user?.displayName || 'Aluno'}</Text>
             <Text style={styles.subtitle}>Continue aprendendo</Text>
           </View>
           <TouchableOpacity style={styles.notificationButton}>
@@ -41,7 +54,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Search Bar */}
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.searchBar}
           onPress={() => router.push('/(tabs)/courses')}
         >
@@ -50,7 +63,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         {/* Progress Overview */}
-        <Animated.View 
+        <Animated.View
           entering={FadeInUp.delay(100).duration(500)}
           style={styles.progressContainer}
         >
@@ -67,7 +80,7 @@ export default function HomeScreen() {
               <Text style={styles.statLabel}>Em andamento</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>2</Text>
+              <Text style={styles.statNumber}>0</Text>
               <Text style={styles.statLabel}>Concluídos</Text>
             </View>
             <View style={styles.statItem}>
@@ -81,7 +94,7 @@ export default function HomeScreen() {
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Continue aprendendo</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.viewAllButton}
               onPress={() => router.push('/(tabs)/courses')}
             >
@@ -108,7 +121,7 @@ export default function HomeScreen() {
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Cursos em destaque</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.viewAllButton}
               onPress={() => router.push('/(tabs)/courses')}
             >

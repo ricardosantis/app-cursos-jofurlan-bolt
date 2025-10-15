@@ -1,24 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, SlidersHorizontal, X } from 'lucide-react-native';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import CourseCard from '@/components/courses/CourseCard';
-import { allCourses } from '@/data/courses';
+import { getAllCourses } from '@/lib/data';
+import { Course } from '@/types';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
 const categories = ['Todos', 'Saúde', 'Bem-estar', 'Produtividade', 'Desenvolvimento pessoal'];
 
-/**
- * @function CoursesScreen
- * @description This component renders the courses screen, allowing users to browse and search for courses.
- * It includes a search bar, category filters, and a grid of course cards.
- * @returns {JSX.Element} The rendered component.
- */
 export default function CoursesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [showFilters, setShowFilters] = useState(false);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const courses = await getAllCourses();
+        setAllCourses(courses);
+      } catch (error) {
+        console.error('Failed to fetch courses:', error);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   const filteredCourses = allCourses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -6,52 +6,47 @@ import { ArrowLeft, Download, BookOpen, Clock, Award } from 'lucide-react-native
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { getCourseById } from '@/data/courses';
+import { getCourseById } from '@/lib/data';
+import { Course } from '@/types';
 import ModuleCard from '@/components/courses/ModuleCard';
 import { useProgress } from '@/hooks/useProgress';
 
-/**
- * @function CourseDetailScreen
- * @description This component renders the course detail screen, which displays information about a specific course.
- * It includes a banner image, course description, module list, and progress tracking.
- * @returns {JSX.Element} The rendered component.
- */
 export default function CourseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const course = getCourseById(parseInt(id || '1'));
+  const [course, setCourse] = useState<Course | null>(null);
   const { getCourseProgress } = useProgress();
   const courseProgress = getCourseProgress(parseInt(id || '1'));
   const [downloading, setDownloading] = useState(false);
 
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        const fetchedCourse = await getCourseById(parseInt(id || '1'));
+        setCourse(fetchedCourse);
+      } catch (error) {
+        console.error('Failed to fetch course:', error);
+      }
+    };
+
+    fetchCourse();
+  }, [id]);
+
   if (!course) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Curso não encontrado</Text>
+        <Text>Carregando curso...</Text>
       </SafeAreaView>
     );
   }
 
-  /**
-   * @function handleDownload
-   * @description Simulates a download process when the user presses the download button.
-   * This function sets a `downloading` state to true for 2 seconds to provide visual feedback.
-   */
   const handleDownload = () => {
     setDownloading(true);
-    // Simulate download
     setTimeout(() => {
       setDownloading(false);
     }, 2000);
   };
 
-  /**
-   * @function handleContinue
-   * @description Navigates the user to the next lesson in the course.
-   * If the user has started the course, it will navigate to the first incomplete module.
-   * If the user has completed the course, it will navigate to the first module.
-   */
   const handleContinue = () => {
-    // Navigate to the first incomplete module
     const firstIncompleteModule = course.modules.find(
       (module) => !module.completed
     );
@@ -59,7 +54,6 @@ export default function CourseDetailScreen() {
     if (firstIncompleteModule) {
       router.push(`/module/${firstIncompleteModule.id}`);
     } else {
-      // If all modules are completed, navigate to the first module
       router.push(`/module/${course.modules[0].id}`);
     }
   };

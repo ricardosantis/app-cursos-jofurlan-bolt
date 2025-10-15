@@ -1,38 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, CheckCircle, Play, FileText, Lock } from 'lucide-react-native';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
-import { getModuleById } from '@/data/courses';
+import { getModuleById } from '@/lib/data';
+import { Module } from '@/types';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { useProgress } from '@/hooks/useProgress';
 
-/**
- * @function ModuleDetailScreen
- * @description This component renders the module detail screen, which displays information about a specific module.
- * It includes the module title, description, and a list of lessons within the module.
- * @returns {JSX.Element} The rendered component.
- */
 export default function ModuleDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const module = getModuleById(parseInt(id || '1'));
+  const [module, setModule] = useState<Module | null>(null);
   const { isLessonComplete } = useProgress();
+
+  useEffect(() => {
+    const fetchModule = async () => {
+      try {
+        const fetchedModule = await getModuleById(parseInt(id || '1'));
+        setModule(fetchedModule);
+      } catch (error) {
+        console.error('Failed to fetch module:', error);
+      }
+    };
+
+    fetchModule();
+  }, [id]);
 
   if (!module) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Módulo não encontrado</Text>
+        <Text>Carregando módulo...</Text>
       </SafeAreaView>
     );
   }
 
-  /**
-   * @function renderLessonIcon
-   * @description Renders the appropriate icon for a lesson based on its type.
-   * @param {string} type - The type of the lesson ('video' or 'text').
-   * @returns {JSX.Element} The icon component.
-   */
   const renderLessonIcon = (type: string) => {
     switch (type) {
       case 'video':
@@ -152,7 +154,6 @@ export default function ModuleDetailScreen() {
         <TouchableOpacity 
           style={styles.continueButton}
           onPress={() => {
-            // Navigate to the first incomplete lesson
             const firstIncompleteLesson = module.lessons.find(
               (lesson) => !isLessonComplete(lesson.id) && !lesson.locked
             );
@@ -160,7 +161,6 @@ export default function ModuleDetailScreen() {
             if (firstIncompleteLesson) {
               router.push(`/lesson/${firstIncompleteLesson.id}`);
             } else {
-              // If all lessons are completed, navigate to the first lesson
               router.push(`/lesson/${module.lessons[0].id}`);
             }
           }}

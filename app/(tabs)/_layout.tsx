@@ -3,6 +3,8 @@ import { Home, BookOpen, Users, User } from 'lucide-react-native';
 import { COLORS, FONTS } from '@/constants/theme';
 import { Platform } from 'react-native';
 
+import { useUser } from '@stackframe/react';
+
 /**
  * @function TabLayout
  * @description This component defines the layout for the main tabs of the application.
@@ -10,6 +12,8 @@ import { Platform } from 'react-native';
  * @returns {JSX.Element} The rendered component.
  */
 export default function TabLayout() {
+  useUser({ or: "redirect" });
+
   return (
     <Tabs
       screenOptions={{
