@@ -1,6 +1,10 @@
 import { Dimensions } from 'react-native';
 const { width, height } = Dimensions.get('window');
 
+/**
+ * @const COLORS
+ * @description A collection of color constants used throughout the application.
+ */
 export const COLORS = {
   // Primary colors
   primary: '#1E88E5',
@@ -45,6 +49,10 @@ export const COLORS = {
   transparent: 'transparent',
 };
 
+/**
+ * @const SIZES
+ * @description A collection of size constants used for layout and typography.
+ */
 export const SIZES = {
   // Global sizes
   base: 8,
@@ -70,6 +78,10 @@ export const SIZES = {
   height,
 };
 
+/**
+ * @const FONTS
+ * @description A collection of font styles used for typography.
+ */
 export const FONTS = {
   largeTitle: { fontFamily: 'Poppins_700Bold', fontSize: SIZES.largeTitle, lineHeight: 40 },
   h1: { fontFamily: 'Poppins_700Bold', fontSize: SIZES.h1, lineHeight: 36 },

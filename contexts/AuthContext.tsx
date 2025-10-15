@@ -10,6 +10,15 @@ const supabase = createClient(
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || ''
 );
 
+/**
+ * @interface AuthContextType
+ * @description Defines the shape of the authentication context.
+ * @property {User | null} user - The current user object, or null if not authenticated.
+ * @property {boolean} isLoading - True if an authentication operation is in progress.
+ * @property {(email: string, password: string) => Promise<void>} signIn - Function to sign in a user.
+ * @property {(name: string, email: string, password: string) => Promise<void>} signUp - Function to sign up a new user.
+ * @property {() => Promise<void>} signOut - Function to sign out the current user.
+ */
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -18,6 +27,10 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
+/**
+ * @const AuthContext
+ * @description The authentication context.
+ */
 export const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
@@ -26,12 +39,26 @@ export const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
+/**
+ * @interface AuthProviderProps
+ * @description Defines the props for the AuthProvider component.
+ * @property {React.ReactNode} children - The child components.
+ */
 interface AuthProviderProps {
   children: React.ReactNode;
 }
 
-// Helper functions for storage operations
+/**
+ * @const storage
+ * @description A helper object for handling storage across different platforms (web and native).
+ */
 const storage = {
+  /**
+   * @function getItem
+   * @description Retrieves an item from storage.
+   * @param {string} key - The key of the item to retrieve.
+   * @returns {Promise<string | null>} The value of the item, or null if not found.
+   */
   async getItem(key: string): Promise<string | null> {
     if (Platform.OS === 'web') {
       return localStorage.getItem(key);
@@ -39,6 +66,13 @@ const storage = {
     return await SecureStore.getItemAsync(key);
   },
 
+  /**
+   * @function setItem
+   * @description Stores an item in storage.
+   * @param {string} key - The key of the item to store.
+   * @param {string} value - The value of the item to store.
+   * @returns {Promise<void>}
+   */
   async setItem(key: string, value: string): Promise<void> {
     if (Platform.OS === 'web') {
       localStorage.setItem(key, value);
@@ -47,6 +81,12 @@ const storage = {
     }
   },
 
+  /**
+   * @function removeItem
+   * @description Removes an item from storage.
+   * @param {string} key - The key of the item to remove.
+   * @returns {Promise<void>}
+   */
   async removeItem(key: string): Promise<void> {
     if (Platform.OS === 'web') {
       localStorage.removeItem(key);
@@ -56,6 +96,12 @@ const storage = {
   }
 };
 
+/**
+ * @function AuthProvider
+ * @description Provides authentication state and functions to its children.
+ * @param {AuthProviderProps} props - The component props.
+ * @returns {JSX.Element} The rendered component.
+ */
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,6 +111,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     loadUser();
   }, []);
 
+  /**
+   * @function loadUser
+   * @description Loads the user from storage.
+   */
   const loadUser = async () => {
     try {
       const userJSON = await storage.getItem('user');
@@ -78,6 +128,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  /**
+   * @function signIn
+   * @description Signs in a user with email and password.
+   * @param {string} email - The user's email.
+   * @param {string} password - The user's password.
+   */
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
@@ -113,6 +169,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  /**
+   * @function signUp
+   * @description Signs up a new user.
+   * @param {string} name - The user's name.
+   * @param {string} email - The user's email.
+   * @param {string} password - The user's password.
+   */
   const signUp = async (name: string, email: string, password: string) => {
     try {
       setIsLoading(true);
@@ -155,6 +218,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  /**
+   * @function signOut
+   * @description Signs out the current user.
+   */
   const signOut = async () => {
     try {
       setIsLoading(true);

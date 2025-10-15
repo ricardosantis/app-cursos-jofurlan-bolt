@@ -6,11 +6,23 @@ import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import { useProgress } from '@/hooks/useProgress';
 import { Course } from '@/types';
 
+/**
+ * @interface CourseCardProps
+ * @description Defines the props for the CourseCard component.
+ * @property {Course} course - The course data to display.
+ * @property {boolean} [isGrid=false] - If true, renders the card in a grid layout.
+ */
 interface CourseCardProps {
   course: Course;
   isGrid?: boolean;
 }
 
+/**
+ * @function CourseCard
+ * @description A component that displays a course card with its details and progress.
+ * @param {CourseCardProps} props - The component props.
+ * @returns {JSX.Element} The rendered component.
+ */
 const CourseCard = ({ course, isGrid = false }: CourseCardProps) => {
   const { getCourseProgress } = useProgress();
   const progress = getCourseProgress(course.id);

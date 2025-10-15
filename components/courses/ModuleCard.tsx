@@ -1,17 +1,30 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
-import { ChevronRight, CheckCircle, BookOpen } from 'lucide-react-native';
+import { ChevronRight, CheckCircle } from 'lucide-react-native';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import { useProgress } from '@/hooks/useProgress';
 import { Module } from '@/types';
 
+/**
+ * @interface ModuleCardProps
+ * @description Defines the props for the ModuleCard component.
+ * @property {Module} module - The module data to display.
+ * @property {number} index - The index of the module in the course.
+ * @property {number} courseId - The ID of the course this module belongs to.
+ */
 interface ModuleCardProps {
   module: Module;
   index: number;
   courseId: number;
 }
 
+/**
+ * @function ModuleCard
+ * @description A component that displays a module card with its details and progress.
+ * @param {ModuleCardProps} props - The component props.
+ * @returns {JSX.Element} The rendered component.
+ */
 const ModuleCard = ({ module, index, courseId }: ModuleCardProps) => {
   const { getModuleProgress } = useProgress();
   const progress = getModuleProgress(module.id);

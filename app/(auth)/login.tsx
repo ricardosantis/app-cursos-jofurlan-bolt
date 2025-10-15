@@ -7,6 +7,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 
+/**
+ * @function LoginScreen
+ * @description This component renders the login screen, allowing users to sign in with their email and password.
+ * It includes form validation, a "show password" toggle, and navigation to the registration and forgot password screens.
+ * @returns {JSX.Element} The rendered component.
+ */
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,6 +20,11 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
 
+  /**
+   * @function handleLogin
+   * @description Handles the login process when the user presses the "Entrar" button.
+   * It performs basic validation, calls the `signIn` function from the auth context, and navigates to the main app on success.
+   */
   const handleLogin = async () => {
     if (!email || !password) return;
     

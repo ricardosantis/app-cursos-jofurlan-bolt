@@ -9,6 +9,12 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 
 const categories = ['Todos', 'Saúde', 'Bem-estar', 'Produtividade', 'Desenvolvimento pessoal'];
 
+/**
+ * @function CoursesScreen
+ * @description This component renders the courses screen, allowing users to browse and search for courses.
+ * It includes a search bar, category filters, and a grid of course cards.
+ * @returns {JSX.Element} The rendered component.
+ */
 export default function CoursesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');

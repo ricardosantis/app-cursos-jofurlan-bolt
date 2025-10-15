@@ -1,6 +1,12 @@
 import { Link, Stack } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
+/**
+ * @function NotFoundScreen
+ * @description This component renders a "Not Found" screen when the user navigates to a route that does not exist.
+ * It provides a link to return to the home screen.
+ * @returns {JSX.Element} The rendered component.
+ */
 export default function NotFoundScreen() {
   return (
     <>
@@ -24,7 +30,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 20,
-    fontWeight: 600,
+    fontWeight: '600',
   },
   link: {
     marginTop: 15,

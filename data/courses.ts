@@ -1,6 +1,9 @@
 import { Course, Module, Lesson } from '@/types';
 
-// Sample lessons
+/**
+ * @const lessons
+ * @description An array of sample lesson data.
+ */
 const lessons: Lesson[] = [
   {
     id: 1,
@@ -89,7 +92,10 @@ const lessons: Lesson[] = [
   },
 ];
 
-// Sample modules
+/**
+ * @const modules
+ * @description An array of sample module data.
+ */
 const modules: Module[] = [
   {
     id: 1,
@@ -125,7 +131,10 @@ const modules: Module[] = [
   },
 ];
 
-// Sample courses
+/**
+ * @const allCourses
+ * @description An array of all available courses.
+ */
 export const allCourses: Course[] = [
   {
     id: 1,
@@ -197,13 +206,34 @@ export const allCourses: Course[] = [
   },
 ];
 
+/**
+ * @const featuredCourses
+ * @description An array of courses that are marked as featured.
+ */
 export const featuredCourses = allCourses.filter(course => course.featured);
+
+/**
+ * @const inProgressCourses
+ * @description An array of courses that are marked as in progress.
+ */
 export const inProgressCourses = allCourses.filter(course => course.inProgress);
 
+/**
+ * @function getCourseById
+ * @description Retrieves a course by its ID.
+ * @param {number} id - The ID of the course to retrieve.
+ * @returns {Course | undefined} The course object, or undefined if not found.
+ */
 export const getCourseById = (id: number): Course | undefined => {
   return allCourses.find(course => course.id === id);
 };
 
+/**
+ * @function getModuleById
+ * @description Retrieves a module by its ID.
+ * @param {number} id - The ID of the module to retrieve.
+ * @returns {Module | undefined} The module object, or undefined if not found.
+ */
 export const getModuleById = (id: number): Module | undefined => {
   for (const course of allCourses) {
     const module = course.modules.find(m => m.id === id);
@@ -212,6 +242,12 @@ export const getModuleById = (id: number): Module | undefined => {
   return undefined;
 };
 
+/**
+ * @function getLessonById
+ * @description Retrieves a lesson by its ID.
+ * @param {number} id - The ID of the lesson to retrieve.
+ * @returns {Lesson | undefined} The lesson object, or undefined if not found.
+ */
 export const getLessonById = (id: number): Lesson | undefined => {
   for (const course of allCourses) {
     for (const module of course.modules) {
@@ -222,6 +258,12 @@ export const getLessonById = (id: number): Lesson | undefined => {
   return undefined;
 };
 
+/**
+ * @function getNextLesson
+ * @description Retrieves the next lesson in the same module.
+ * @param {number} currentLessonId - The ID of the current lesson.
+ * @returns {Lesson | undefined} The next lesson object, or undefined if there is no next lesson.
+ */
 export const getNextLesson = (currentLessonId: number): Lesson | undefined => {
   for (const course of allCourses) {
     for (const module of course.modules) {
@@ -234,6 +276,12 @@ export const getNextLesson = (currentLessonId: number): Lesson | undefined => {
   return undefined;
 };
 
+/**
+ * @function getPreviousLesson
+ * @description Retrieves the previous lesson in the same module.
+ * @param {number} currentLessonId - The ID of the current lesson.
+ * @returns {Lesson | undefined} The previous lesson object, or undefined if there is no previous lesson.
+ */
 export const getPreviousLesson = (currentLessonId: number): Lesson | undefined => {
   for (const course of allCourses) {
     for (const module of course.modules) {

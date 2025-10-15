@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, CheckCircle, Play, FileText, Lock } from 'lucide-react-native';
@@ -8,10 +8,16 @@ import { getModuleById } from '@/data/courses';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { useProgress } from '@/hooks/useProgress';
 
+/**
+ * @function ModuleDetailScreen
+ * @description This component renders the module detail screen, which displays information about a specific module.
+ * It includes the module title, description, and a list of lessons within the module.
+ * @returns {JSX.Element} The rendered component.
+ */
 export default function ModuleDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const module = getModuleById(parseInt(id || '1'));
-  const { markLessonComplete, isLessonComplete } = useProgress();
+  const { isLessonComplete } = useProgress();
 
   if (!module) {
     return (
@@ -21,6 +27,12 @@ export default function ModuleDetailScreen() {
     );
   }
 
+  /**
+   * @function renderLessonIcon
+   * @description Renders the appropriate icon for a lesson based on its type.
+   * @param {string} type - The type of the lesson ('video' or 'text').
+   * @returns {JSX.Element} The icon component.
+   */
   const renderLessonIcon = (type: string) => {
     switch (type) {
       case 'video':

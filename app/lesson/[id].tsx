@@ -11,6 +11,12 @@ import { useProgress } from '@/hooks/useProgress';
 
 const { width } = Dimensions.get('window');
 
+/**
+ * @function LessonScreen
+ * @description This component renders the lesson screen, which displays the content of a specific lesson.
+ * It can handle both video and text content, and includes navigation to the previous and next lessons.
+ * @returns {JSX.Element} The rendered component.
+ */
 export default function LessonScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const lesson = getLessonById(parseInt(id || '1'));
@@ -36,6 +42,10 @@ export default function LessonScreen() {
     );
   }
 
+  /**
+   * @function handleComplete
+   * @description Marks the current lesson as complete.
+   */
   const handleComplete = () => {
     if (!isCompleted && lesson) {
       markLessonComplete(lesson.id);
@@ -43,10 +53,19 @@ export default function LessonScreen() {
     }
   };
 
+  /**
+   * @function handleVideoComplete
+   * @description Automatically marks the lesson as complete when the video finishes playing.
+   */
   const handleVideoComplete = () => {
     handleComplete();
   };
 
+  /**
+   * @function handleNavigation
+   * @description Navigates to a different lesson.
+   * @param {number} targetId - The ID of the lesson to navigate to.
+   */
   const handleNavigation = (targetId: number) => {
     router.replace(`/lesson/${targetId}`);
   };

@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, FlatList } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,6 +10,13 @@ import Animated, { FadeInRight, FadeInUp } from 'react-native-reanimated';
 import CourseCard from '@/components/courses/CourseCard';
 import { featuredCourses, inProgressCourses } from '@/data/courses';
 
+/**
+ * @function HomeScreen
+ * @description This component renders the home screen of the application.
+ * It displays a greeting to the user, a search bar, an overview of the user's progress,
+ * and lists of courses to continue learning and featured courses.
+ * @returns {JSX.Element} The rendered component.
+ */
 export default function HomeScreen() {
   const { user } = useAuth();
   const { getOverallProgress } = useProgress();

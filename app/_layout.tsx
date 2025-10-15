@@ -13,6 +13,12 @@ import { NotificationProvider } from '@/contexts/NotificationContext';
 // Keep the splash screen visible until fonts are loaded
 SplashScreen.preventAutoHideAsync();
 
+/**
+ * @function RootLayout
+ * @description This is the root layout of the application. It wraps all other components with necessary providers
+ * such as AuthProvider, ProgressProvider, and NotificationProvider. It also handles font loading and the splash screen.
+ * @returns {JSX.Element | null} The rendered component, or null if fonts are not yet loaded.
+ */
 export default function RootLayout() {
   useFrameworkReady();
 

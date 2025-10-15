@@ -3,6 +3,12 @@ import { Home, BookOpen, Users, User } from 'lucide-react-native';
 import { COLORS, FONTS } from '@/constants/theme';
 import { Platform } from 'react-native';
 
+/**
+ * @function TabLayout
+ * @description This component defines the layout for the main tabs of the application.
+ * It uses a Tabs navigator to manage the home, courses, community, and profile screens.
+ * @returns {JSX.Element} The rendered component.
+ */
 export default function TabLayout() {
   return (
     <Tabs
