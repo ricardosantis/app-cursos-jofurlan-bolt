@@ -6,7 +6,7 @@ import { ArrowLeft, Download, BookOpen, Clock, Award } from 'lucide-react-native
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { getCourseById } from '@/lib/data';
+import { api } from '@/lib/api';
 import { Course } from '@/types';
 import ModuleCard from '@/components/courses/ModuleCard';
 import { useProgress } from '@/hooks/useProgress';
@@ -15,21 +15,26 @@ export default function CourseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [course, setCourse] = useState<Course | null>(null);
   const { getCourseProgress } = useProgress();
-  const courseProgress = getCourseProgress(parseInt(id || '1'));
+  const [courseProgress, setCourseProgress] = useState(0);
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
-    const fetchCourse = async () => {
+    const fetchCourseAndProgress = async () => {
       try {
-        const fetchedCourse = await getCourseById(parseInt(id || '1'));
+        const courseId = parseInt(id || '1');
+        const [fetchedCourse, progress] = await Promise.all([
+          api.courses.getById(courseId),
+          getCourseProgress(courseId),
+        ]);
         setCourse(fetchedCourse);
+        setCourseProgress(progress);
       } catch (error) {
-        console.error('Failed to fetch course:', error);
+        console.error('Failed to fetch course details:', error);
       }
     };
 
-    fetchCourse();
-  }, [id]);
+    fetchCourseAndProgress();
+  }, [id, getCourseProgress]);
 
   if (!course) {
     return (

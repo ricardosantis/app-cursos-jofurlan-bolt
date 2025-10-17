@@ -1,9 +1,26 @@
 import { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, router, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import {
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
+import {
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+} from '@expo-google-fonts/poppins';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
-import { StackProvider, StackTheme } from '@stackframe/react';
-import { stackClientApp } from '@/lib/stack';
+import { StackProvider, StackTheme, useUser } from '@stackframe/react';
+import { stackClientApp } from '@/stack/client';
+import { ProgressProvider } from '@/contexts/ProgressContext';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 
 // Keep the splash screen visible until fonts are loaded
 SplashScreen.preventAutoHideAsync();
@@ -14,6 +31,23 @@ SplashScreen.preventAutoHideAsync();
  * such as AuthProvider, ProgressProvider, and NotificationProvider. It also handles font loading and the splash screen.
  * @returns {JSX.Element | null} The rendered component, or null if fonts are not yet loaded.
  */
+function AuthLayout() {
+  const user = useUser();
+  const segments = useSegments();
+
+  useEffect(() => {
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (user && inAuthGroup) {
+      router.replace('/(tabs)');
+    } else if (!user && !inAuthGroup) {
+      router.replace('/(auth)/login');
+    }
+  }, [user, segments]);
+
+  return <Stack screenOptions={{ headerShown: false }} />;
+}
+
 export default function RootLayout() {
   useFrameworkReady();
 
@@ -44,14 +78,7 @@ export default function RootLayout() {
         <StackTheme>
           <ProgressProvider>
             <NotificationProvider>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="course/[id]" options={{ headerShown: false, presentation: 'card' }} />
-                <Stack.Screen name="module/[id]" options={{ headerShown: false, presentation: 'card' }} />
-                <Stack.Screen name="lesson/[id]" options={{ headerShown: false, presentation: 'fullScreenModal' }} />
-                <Stack.Screen name="+not-found" options={{ title: 'Oops!' }} />
-              </Stack>
+              <AuthLayout />
               <StatusBar style="auto" />
             </NotificationProvider>
           </ProgressProvider>

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, SlidersHorizontal, X } from 'lucide-react-native';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import CourseCard from '@/components/courses/CourseCard';
-import { getAllCourses } from '@/lib/data';
+import { api } from '@/lib/api';
 import { Course } from '@/types';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
@@ -19,7 +19,7 @@ export default function CoursesScreen() {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const courses = await getAllCourses();
+        const courses = await api.courses.getAll();
         setAllCourses(courses);
       } catch (error) {
         console.error('Failed to fetch courses:', error);

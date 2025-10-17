@@ -8,31 +8,37 @@ import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import { useProgress } from '@/hooks/useProgress';
 import Animated, { FadeInRight, FadeInUp } from 'react-native-reanimated';
 import CourseCard from '@/components/courses/CourseCard';
-import { getFeaturedCourses, getInProgressCourses } from '@/lib/data';
+import { api } from '@/lib/api';
 import { Course } from '@/types';
 
 export default function HomeScreen() {
   const user = useUser();
   const { getOverallProgress } = useProgress();
-  const overallProgress = getOverallProgress();
+  const [overallProgress, setOverallProgress] = useState(0);
 
   const [featuredCourses, setFeaturedCourses] = useState<Course[]>([]);
   const [inProgressCourses, setInProgressCourses] = useState<Course[]>([]);
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    const fetchData = async () => {
       try {
-        const featured = await getFeaturedCourses();
+        const [featured, inProgress] = await Promise.all([
+          api.courses.getFeatured(),
+          api.courses.getInProgress(),
+        ]);
+        
         setFeaturedCourses(featured);
-
-        const inProgress = await getInProgressCourses();
         setInProgressCourses(inProgress);
+
+        // Get overall progress
+        const progress = await getOverallProgress();
+        setOverallProgress(progress);
       } catch (error) {
-        console.error('Failed to fetch courses:', error);
+        console.error('Failed to fetch data:', error);
       }
     };
 
-    fetchCourses();
+    fetchData();
   }, []);
 
   return (

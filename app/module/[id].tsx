@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, CheckCircle, Play, FileText, Lock } from 'lucide-react-native';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
-import { getModuleById } from '@/lib/data';
+import { api } from '@/lib/api';
 import { Module } from '@/types';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 import { useProgress } from '@/hooks/useProgress';
@@ -17,7 +17,7 @@ export default function ModuleDetailScreen() {
   useEffect(() => {
     const fetchModule = async () => {
       try {
-        const fetchedModule = await getModuleById(parseInt(id || '1'));
+        const fetchedModule = await api.modules.getById(parseInt(id || '1'));
         setModule(fetchedModule);
       } catch (error) {
         console.error('Failed to fetch module:', error);

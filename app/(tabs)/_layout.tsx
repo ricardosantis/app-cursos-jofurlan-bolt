@@ -2,7 +2,6 @@ import { Tabs } from 'expo-router';
 import { Home, BookOpen, Users, User } from 'lucide-react-native';
 import { COLORS, FONTS } from '@/constants/theme';
 import { Platform } from 'react-native';
-
 import { useUser } from '@stackframe/react';
 
 /**
@@ -12,7 +11,7 @@ import { useUser } from '@stackframe/react';
  * @returns {JSX.Element} The rendered component.
  */
 export default function TabLayout() {
-  useUser({ or: "redirect" });
+  // A proteção será movida para o layout raiz (app/_layout.tsx)
 
   return (
     <Tabs

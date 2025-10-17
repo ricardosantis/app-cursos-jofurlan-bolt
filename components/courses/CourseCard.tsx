@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { router } from 'expo-router';
 import { PlayCircle, BookOpen } from 'lucide-react-native';
@@ -25,7 +25,15 @@ interface CourseCardProps {
  */
 const CourseCard = ({ course, isGrid = false }: CourseCardProps) => {
   const { getCourseProgress } = useProgress();
-  const progress = getCourseProgress(course.id);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const fetchProgress = async () => {
+      const value = await getCourseProgress(course.id);
+      setProgress(value);
+    };
+    fetchProgress();
+  }, [course.id, getCourseProgress]);
 
   return (
     <TouchableOpacity
@@ -75,7 +83,9 @@ const CourseCard = ({ course, isGrid = false }: CourseCardProps) => {
         <View style={styles.statsRow}>
           <View style={styles.stat}>
             <BookOpen size={14} color={COLORS.gray} />
-            <Text style={styles.statText}>{course.modules.length} módulos</Text>
+            <Text style={styles.statText}>
+              {course.modules ? course.modules.length : 0} módulos
+            </Text>
           </View>
           <View style={styles.stat}>
             <PlayCircle size={14} color={COLORS.gray} />

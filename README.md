@@ -2,6 +2,16 @@
 
 EduCourse is a mobile application built with React Native and Expo that provides an online learning platform. Users can browse courses, watch lessons, track their progress, and interact with a community of learners.
 
+## 🚀 Quick Start
+
+```bash
+npm run dev:all
+```
+
+This single command starts both the backend API and the mobile app!
+
+See [README_QUICK_START.md](./README_QUICK_START.md) for more details.
+
 ## Features
 
 - **User Authentication:** Secure sign-up and sign-in functionality using Supabase for authentication.

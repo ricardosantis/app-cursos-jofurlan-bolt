@@ -1,25 +1,25 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { api } from '@/lib/api';
 import { useUser } from '@stackframe/react';
-import sql from '@/lib/neon';
-
-interface ProgressState {
-  completedLessons: number[];
-}
 
 interface ProgressContextType {
-  markLessonComplete: (lessonId: number) => void;
+  markLessonComplete: (lessonId: number) => Promise<void>;
   isLessonComplete: (lessonId: number) => boolean;
-  getCourseProgress: (courseId: number) => number;
-  getModuleProgress: (moduleId: number) => number;
-  getOverallProgress: () => number;
+  getCourseProgress: (courseId: number) => Promise<number>;
+  getModuleProgress: (moduleId: number) => Promise<number>;
+  getOverallProgress: () => Promise<number>;
+  completedLessons: number[];
+  isLoading: boolean;
 }
 
 export const ProgressContext = createContext<ProgressContextType>({
-  markLessonComplete: () => {},
+  markLessonComplete: async () => {},
   isLessonComplete: () => false,
-  getCourseProgress: () => 0,
-  getModuleProgress: () => 0,
-  getOverallProgress: () => 0,
+  getCourseProgress: async () => 0,
+  getModuleProgress: async () => 0,
+  getOverallProgress: async () => 0,
+  completedLessons: [],
+  isLoading: true,
 });
 
 interface ProgressProviderProps {
@@ -28,31 +28,40 @@ interface ProgressProviderProps {
 
 export const ProgressProvider = ({ children }: ProgressProviderProps) => {
   const user = useUser();
+  
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadProgress = async () => {
-      if (user) {
+      // Proteção: aguarda o Stack Auth estar pronto
+      if (!user || user === undefined) {
+        setIsLoading(false);
+        return;
+      }
+      
+      if (user?.id) {
         try {
-          const progress = await sql<any[]>`
-            SELECT lesson_id FROM user_lesson_progress WHERE user_id = ${user.id}
-          `;
-          setCompletedLessons(progress.map(p => p.lesson_id));
+          const data = await api.progress.getUserProgress(user.id);
+          setCompletedLessons(data.completedLessons);
         } catch (error) {
           console.error('Failed to load progress:', error);
+          setCompletedLessons([]);
         }
       }
+      
+      setIsLoading(false);
     };
 
     loadProgress();
   }, [user]);
 
   const markLessonComplete = async (lessonId: number) => {
-    if (user && !completedLessons.includes(lessonId)) {
+    if (!user?.id) return;
+    
+    if (!completedLessons.includes(lessonId)) {
       try {
-        await sql`
-          INSERT INTO user_lesson_progress (user_id, lesson_id) VALUES (${user.id}, ${lessonId})
-        `;
+        await api.progress.markLessonComplete(user.id, lessonId, true);
         setCompletedLessons(prev => [...prev, lessonId]);
       } catch (error) {
         console.error('Failed to save progress:', error);
@@ -64,28 +73,54 @@ export const ProgressProvider = ({ children }: ProgressProviderProps) => {
     return completedLessons.includes(lessonId);
   };
 
-  // NOTE: The progress calculation functions below are not yet refactored
-  // and will not work correctly as they depend on the old static data structure.
-  const getCourseProgress = (courseId: number) => {
-    return 0;
+  const getCourseProgress = async (courseId: number): Promise<number> => {
+    if (!user?.id) return 0;
+    
+    try {
+      const data = await api.progress.getCourseProgress(user.id, courseId);
+      return data.percentage;
+    } catch (error) {
+      console.error('Failed to get course progress:', error);
+      return 0;
+    }
   };
 
-  const getModuleProgress = (moduleId: number) => {
-    return 0;
+  const getModuleProgress = async (moduleId: number): Promise<number> => {
+    if (!user?.id) return 0;
+    
+    try {
+      const data = await api.progress.getModuleProgress(user.id, moduleId);
+      return data.percentage;
+    } catch (error) {
+      console.error('Failed to get module progress:', error);
+      return 0;
+    }
   };
 
-  const getOverallProgress = () => {
-    return 0;
+  const getOverallProgress = async (): Promise<number> => {
+    if (!user?.id) return 0;
+    
+    try {
+      const data = await api.progress.getOverallProgress(user.id);
+      return data.percentage;
+    } catch (error) {
+      console.error('Failed to get overall progress:', error);
+      return 0;
+    }
   };
 
   return (
-    <ProgressContext.Provider value={{
-      markLessonComplete,
-      isLessonComplete,
-      getCourseProgress,
-      getModuleProgress,
-      getOverallProgress,
-    }}>
+    <ProgressContext.Provider
+      value={{
+        markLessonComplete,
+        isLessonComplete,
+        getCourseProgress,
+        getModuleProgress,
+        getOverallProgress,
+        completedLessons,
+        isLoading,
+      }}
+    >
       {children}
     </ProgressContext.Provider>
   );

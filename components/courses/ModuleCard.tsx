@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { ChevronRight, CheckCircle } from 'lucide-react-native';
@@ -27,49 +27,22 @@ interface ModuleCardProps {
  */
 const ModuleCard = ({ module, index, courseId }: ModuleCardProps) => {
   const { getModuleProgress } = useProgress();
-  const progress = getModuleProgress(module.id);
+  const [progress, setProgress] = useState(0);
 
+  useEffect(() => {
+    const fetchProgress = async () => {
+      const value = await getModuleProgress(module.id);
+      setProgress(value);
+    };
+    fetchProgress();
+  }, [module.id, getModuleProgress]);
+
+  // Simplificado para diagnóstico
   return (
-    <TouchableOpacity
-      style={styles.container}
-      onPress={() => router.push(`/module/${module.id}`)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.header}>
-        <View style={styles.leftContent}>
-          <View style={styles.indexContainer}>
-            <Text style={styles.indexText}>{index + 1}</Text>
-          </View>
-          <View>
-            <Text style={styles.title}>{module.title}</Text>
-            <Text style={styles.info}>
-              {module.lessons.length} aulas • {module.duration}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.rightContent}>
-          {progress === 100 ? (
-            <CheckCircle size={22} color={COLORS.success} />
-          ) : (
-            <ChevronRight size={22} color={COLORS.primary} />
-          )}
-        </View>
-      </View>
-
-      <View style={styles.footer}>
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progressFill, 
-                { width: `${progress}%` }
-              ]} 
-            />
-          </View>
-          <Text style={styles.progressText}>{progress}%</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
+    <View style={styles.container}>
+      <Text style={styles.title}>{index + 1}. {module.title}</Text>
+      <Text style={styles.info}>Progresso: {progress}%</Text>
+    </View>
   );
 };
 

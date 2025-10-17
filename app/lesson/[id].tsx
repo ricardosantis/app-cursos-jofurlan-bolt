@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft, ChevronLeft, ChevronRight, Download } from 'lucide-react-native';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
-import { getLessonById, getNextLesson, getPreviousLesson } from '@/lib/data';
+import { api } from '@/lib/api';
 import { Lesson } from '@/types';
 import { Video, ResizeMode } from 'expo-av';
 import { WebView } from 'react-native-webview';
@@ -26,14 +26,14 @@ export default function LessonScreen() {
     const fetchLesson = async () => {
       try {
         const lessonId = parseInt(id || '1');
-        const fetchedLesson = await getLessonById(lessonId);
+        const fetchedLesson = await api.lessons.getById(lessonId);
         setLesson(fetchedLesson);
 
         if (fetchedLesson) {
           setIsCompleted(isLessonComplete(fetchedLesson.id));
-          const fetchedNextLesson = await getNextLesson(lessonId);
+          const fetchedNextLesson = await api.lessons.getNext(lessonId).catch(() => null);
           setNextLesson(fetchedNextLesson);
-          const fetchedPreviousLesson = await getPreviousLesson(lessonId);
+          const fetchedPreviousLesson = await api.lessons.getPrevious(lessonId).catch(() => null);
           setPreviousLesson(fetchedPreviousLesson);
         }
       } catch (error) {
